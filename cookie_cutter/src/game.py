@@ -35,7 +35,7 @@ class Game:
         self.allowable_boundary_distance = 100
         self.moving_ticks_boundary = 0
 
-        self.random_movement_clock = CLOCK_COUNTDOWN_START
+        self.random_movement_clock = 1 # MAGIC
 
 
         # We will store all game objects here
