@@ -1,5 +1,6 @@
 import random
 import sys
+import heapq
 
 import comms
 from object_types import ObjectTypes
@@ -29,6 +30,12 @@ class Game:
 
         # We will store all game objects here
         self.objects = {}
+
+        # Get the current position of your tank
+        self.my_tank_pos = self.objects.get(self.tank_id)
+
+        # Get current position of enemy
+        self.enemy_tank_pos = self.objects.get(self.enemy_tank_id)
 
         next_init_message = comms.read_message()
         while next_init_message != comms.END_INIT_SIGNAL:
@@ -96,30 +103,29 @@ class Game:
         """
 
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
-         # Example implementation:
-        
-        all_object_ids = self.objects.keys()
-        
-        # print(all_object_ids, file=sys.stderr)
-        
-        # Get the current position of your tank
-        my_tank = self.objects.get(self.tank_id)
-        if my_tank is None:
-            return
-        
-        if (self.close_to_boundary()):
-            comms.post_message({"path": [self.width/2, self.height/2]})
 
-        # Decide on a random movement direction (for demonstration purposes)
-        # move_direction = random.randint(0, 360)
+        # First element is the closest power up to our tank
+        # index has 3 elements -> distance between the tank n the power up, position of the powerup, type of the powerup
+        self.power_ups_distances = []
+    
+        # Iterate through the updated objects
+        for updated_object in self.current_turn_message["message"]["updated_objects"]:
+            # if the object has no velocity, just position (Walls: 3 & 4, PowerUps: 7, Boundary is type 5)
+            if updated_object["type"] == 7:
+                self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
+            # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
 
-        # # Shoot at a random angle (for demonstration purposes)
-        # shoot_angle = random.uniform(0, 360)
-
-        # # Post the movement and shooting actions
-        # comms.post_message({"move": 90})
-        # comms.post_message({"shoot": shoot_angle})
         
+    def update_powerUp_distances(self, position: list(), powerup_type: str) -> None:
+        """
+        takes in the details of the position and powerup type of a Power Up object
+        position: position of the power up
+        powerup_type: "HEALTH" / "SPEED" / "DAMAGE"
+
+        modifies the power_ups_reachability array
+        """
+        heapq.heappush(self.power_ups_distances, (distance(self.my_tank_pos, position), position, powerup_type))
+
 
     # checks if we are close to boundary
     def close_to_boundary(self):
@@ -198,16 +204,23 @@ class Game:
         pass
 
 
+    def shoot_tank(self):
+        '''
+        Shoots tank towards a desired target 
+        Considerations
+            - Nearby walls that could cause reboself.enemy_tank_pos[1] - self.my_tank_pos[1]und (don't shoot perpendicularly) - includes boundaries
+            - Shoot at their projected position -
+            - 
+        '''
+        # See where their tank is,
+        # Check if there's a wall between s and them
         
-
-
-
-
-
-
-
-
-
+        # shoot
+        # Maths to find angle
+        y_diff = self.enemy_tank_pos[1] - self.my_tank_pos[1]
+        x_diff = self.enemy_tank_pos[0] - self.my_tank_pos[0]
+        shoot_angle = math.atan(y_diff // x_diff)
+        comms.post_message({"shoot": shoot_angle})
 
 
 
