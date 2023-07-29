@@ -40,11 +40,11 @@ class Game:
         # We will store all game objects here
         self.objects = {}
 
-        # Get the current position of your tank
-        self.my_tank_pos = self.objects.get(self.tank_id)
+        # Current position of your tank
+        self.my_tank_pos = None
 
-        # Get current position of enemy
-        self.enemy_tank_pos = self.objects.get(self.enemy_tank_id)
+        # Current position of enemy tank
+        self.enemy_tank_pos = None
 
         next_init_message = comms.read_message()
         while next_init_message != comms.END_INIT_SIGNAL:
@@ -110,8 +110,11 @@ class Game:
         """
         This is where you should write your bot code to process the data and respond to the game.
         """
+        self.update_tanks_pos()
         self.update_closing_boundaries()
         self.close_to_closing_boundary()
+
+        self.shoot_tank()
 
         # if not moving away from boundary
         if (self.moving_ticks_boundary <= 0):
@@ -134,7 +137,15 @@ class Game:
         #     if updated_object["type"] == ObjectTypes.POWERUP.value:
         #         self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
         #     # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
+        
 
+    def update_tanks_pos(self):
+        '''
+        Takes no arguments, update enemy pos
+        '''
+        
+        self.enemy_tank_pos = self.objects.get(self.enemy_tank_id)["position"]
+        self.my_tank_pos = self.objects.get(self.tank_id)["position"]
         
     def update_powerUp_distances(self, position: list(), powerup_type: str) -> None:
         """
@@ -251,9 +262,16 @@ class Game:
         
         # shoot
         # Maths to find angle
+
         y_diff = self.enemy_tank_pos[1] - self.my_tank_pos[1]
         x_diff = self.enemy_tank_pos[0] - self.my_tank_pos[0]
-        shoot_angle = math.atan(y_diff // x_diff)
+        print(x_diff, file=sys.stderr)
+        print(y_diff, file=sys.stderr)
+        # if enemy is on left
+        if x_diff < 0:  
+            shoot_angle = 180.0 - (180/math.pi) * (math.atan(y_diff / x_diff))
+        else: #enemy is on right
+            shoot_angle = (180/math.pi) * (math.atan(y_diff / x_diff))
         comms.post_message({"shoot": shoot_angle})
 
     # paths to a random location
