@@ -142,7 +142,7 @@ class Game:
         # Get distances from power ups based on current position
         self.update_powerUp_distances()
 
-        print(f"the current actions list: {self.actions}", file=sys.stderr)
+        # print(f"the current actions list: {self.actions}", file=sys.stderr)
 
 
     def update_tanks_pos(self):
