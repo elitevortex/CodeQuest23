@@ -116,11 +116,11 @@ class Game:
         self.power_ups_distances = []
     
         # # Iterate through the updated objects
-        for updated_object in self.current_turn_message["message"]["updated_objects"]:
-            # if the object has no velocity, just position (Walls: 3 & 4, PowerUps: 7, Boundary is type 5)
-            if updated_object["type"] == ObjectTypes.POWERUP.value:
-                self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
-            # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
+        # for updated_object in self.current_turn_message["message"]["updated_objects"]:
+        #     # if the object has no velocity, just position (Walls: 3 & 4, PowerUps: 7, Boundary is type 5)
+        #     if updated_object["type"] == ObjectTypes.POWERUP.value:
+        #         self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
+        #     # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
 
         
     def update_powerUp_distances(self, position: list(), powerup_type: str) -> None:
@@ -237,6 +237,7 @@ class Game:
         x_diff = self.enemy_tank_pos[0] - self.my_tank_pos[0]
         shoot_angle = math.atan(y_diff // x_diff)
         comms.post_message({"shoot": shoot_angle})
+        # helo
 
     # paths to a random location
     def path_random(self):
