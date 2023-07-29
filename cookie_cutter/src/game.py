@@ -121,7 +121,7 @@ class Game:
             "type": 4,
             "position": [356.12, 534.39],
             "hp": 1
-        }
+        }mkkn
 
         "boundary-id": {
             "type": 6, 
@@ -152,6 +152,16 @@ class Game:
 
 
     
+
+
+
+
+
+
+
+
+
+
 import math
 ## HELPER FUNCTIONS 
 def distance(point1, point2):
