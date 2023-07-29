@@ -50,6 +50,11 @@ class Game:
         # Store distances from current position of tank to power ups 
         self.power_ups_distances = []
 
+        # Actions array that stores the actions we need to perform based on the input
+        # Lowest index = highest priority 
+        # O: Avoid closing boundary -> 1: dodget bullet -> 2: keeping distance from tank too near -> 3. picking up nearby power up -> 4: moving randomly
+        self.actions = []
+
         next_init_message = comms.read_message()
         while next_init_message != comms.END_INIT_SIGNAL:
             # At this stage, there won't be any "events" in the message. So we only care about the object_info.
@@ -87,6 +92,7 @@ class Game:
         It's our turn! Read what the game has sent us and update the game info.
         :returns True if the game continues, False if the end game signal is received and the bot should be terminated
         """
+
         # Read and save the message
         self.current_turn_message = comms.read_message()
 
@@ -114,9 +120,14 @@ class Game:
         """
         This is where you should write your bot code to process the data and respond to the game.
         """
+
+        # Reset actions we need to do, 5 is current number of functions that initiate an action
+        self.actions [None] * 5
+
         self.update_tanks_pos()
         self.update_closing_boundaries()
         self.close_to_closing_boundary()
+        self.check_close_to_enemy_tank()
 
         self.shoot_tank()
 
@@ -130,6 +141,8 @@ class Game:
 
         # Get distances from power ups based on current position
         self.update_powerUp_distances()
+
+        print(f"the current actions list: {self.actions}", file=sys.stderr)
 
 
     def update_tanks_pos(self):
@@ -151,6 +164,9 @@ class Game:
         for game_object in self.objects.values():
             if game_object["type"] == ObjectTypes.POWERUP.value:
                 heapq.heappush(self.power_ups_distances, (math.dist(self.my_tank_pos, game_object["position"]), game_object))
+
+        # TO-DO: priority of power up being the last one as of now, potentially update this
+        self.actions[3] = comms.post_message({"path": self.power_ups_distances[0][1]})
 
 
     # updates the values of the self.closing_boundary {top, right, bottom, left}
@@ -239,6 +255,18 @@ class Game:
         rand_y = random.randrange(int(self.closing_boundary["bottom"]) + MAGIC_DISTANCE, int(self.closing_boundary["top"]) - MAGIC_DISTANCE)
         comms.post_message({"path": [rand_x, rand_y]})
         self.random_movement_clock = CLOCK_COUNTDOWN_START
+
+    def check_close_to_enemy_tank(self):
+        # We're getting a bit too close to our enemy tank if our distance from each other is less than 100
+        print(f"distance between my n my enemy: {distance(self.my_tank_pos, self.enemy_tank_pos)}", file=sys.stderr)
+        move_needed = distance(self.my_tank_pos, self.enemy_tank_pos) < 100
+
+        # If we need to move, then add action of path to the direction opposite where enemy tank is going + 
+        if move_needed:
+            # Logic chosen: go opposite direction of the enemy with the same magnitude
+            # E.g. enemy's velocity [-100.00, -100.00] -> chosen coordinate is [current x + 100, current y = 100]
+            goal_position = [self.my_tank_pos[0] - self.objects.get(self.enemy_tank_id)["velocity"][0], self.my_tank_pos[1] - self.objects.get(self.enemy_tank_id)["velocity"][1]]
+            self.actions[2] = comms.post_message({"path": goal_position})
 
 
 
