@@ -50,11 +50,6 @@ class Game:
         # Store distances from current position of tank to power ups 
         self.power_ups_distances = []
 
-        # Actions array that stores the actions we need to perform based on the input
-        # Lowest index = highest priority 
-        # O: Avoid closing boundary -> 1: dodget bullet -> 2: keeping distance from tank too near -> 3. picking up nearby power up -> 4: moving randomly
-        self.actions = []
-
         next_init_message = comms.read_message()
         while next_init_message != comms.END_INIT_SIGNAL:
             # At this stage, there won't be any "events" in the message. So we only care about the object_info.
@@ -120,10 +115,6 @@ class Game:
         """
         This is where you should write your bot code to process the data and respond to the game.
         """
-
-        # Reset actions we need to do, 5 is current number of functions that initiate an action
-        self.actions = [None] * 5
-
         self.update_tanks_pos()
         self.update_closing_boundaries()
         self.close_to_closing_boundary()
@@ -171,7 +162,7 @@ class Game:
         # TO-DO: priority of power up being the last one as of now, potentially update this
         if power_up_exist:
             should_be_position = heapq.heappop(self.power_ups_distances)[1]['position']
-            self.actions[3] = comms.post_message({"path": should_be_position})
+            comms.post_message({"path": should_be_position})
 
 
     # updates the values of the self.closing_boundary {top, right, bottom, left}
@@ -279,7 +270,8 @@ class Game:
             # enemy is on right (can be handled by one angle)
             else: 
                 shoot_angle = (180/math.pi) * (math.atan( y_diff /  x_diff))
-            comms.post_message({"shoot": shoot_angle})
+            
+            # comms.post_message({"shoot": shoot_angle})
 
     # paths to a random location
     def path_random(self):
@@ -299,7 +291,7 @@ class Game:
             # Logic chosen: go opposite direction of the enemy with the same magnitude
             # E.g. enemy's velocity [-100.00, -100.00] -> chosen coordinate is [current x + 100, current y = 100]
             goal_position = [self.my_tank_pos[0] - self.objects.get(self.enemy_tank_id)["velocity"][0], self.my_tank_pos[1] - self.objects.get(self.enemy_tank_id)["velocity"][1]]
-            self.actions[2] = comms.post_message({"path": goal_position})
+            comms.post_message({"path": goal_position})
 
 
 ## HELPER FUNCTIONS 
