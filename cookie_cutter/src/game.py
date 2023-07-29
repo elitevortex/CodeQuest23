@@ -222,6 +222,7 @@ class Game:
         # shoot
         # Maths to find angle
 
+
         y_diff = self.enemy_tank_pos[1] - self.my_tank_pos[1]
         x_diff = self.enemy_tank_pos[0] - self.my_tank_pos[0]
 
@@ -232,7 +233,7 @@ class Game:
 
         # Collision occurs within 10 pixels - arbitrary
         will_collide = False
-        #Check if we collide with walls
+        # #Check if we collide with walls
         # for game_object in self.objects.values():
         #     if game_object["type"] == ObjectTypes.WALL.value:
         #         wall_pos_x = game_object["position"][0]
@@ -240,10 +241,10 @@ class Game:
         #         # If there's a collision with a wall
         #         # ie. it's within the range of the wall
         #         projected_y =  m * wall_pos_x + y_int
-        #         if projected_y - 10 <= wall_pos_y <=  projected_y + 10
+        #         if projected_y - 10 <= wall_pos_y <=  projected_y + 10:
         #             # dont shoot, exit early
         #             will_collide = True
-        #             break
+                    
         
         # Shoot if we have open sight
         if will_collide == False:
