@@ -6,6 +6,7 @@ import comms
 from object_types import ObjectTypes
 
 MAGIC_DISTANCE = 50
+CLOCK_COUNTDOWN_START = 8
 
 class Game:
     """
@@ -32,6 +33,9 @@ class Game:
         # distance away from boundary
         self.allowable_boundary_distance = 100
         self.moving_ticks_boundary = 0
+
+        self.random_movement_clock = CLOCK_COUNTDOWN_START
+
 
         # We will store all game objects here
         self.objects = {}
@@ -109,6 +113,14 @@ class Game:
         self.update_closing_boundaries()
         self.close_to_closing_boundary()
 
+        # if not moving away from boundary
+        if (self.moving_ticks_boundary <= 0):
+            self.random_movement_clock -= 1
+            
+            # if long enough time has passed, then move to random spot
+            if (self.random_movement_clock <= 0):
+                self.path_random()
+
 
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
 
@@ -159,7 +171,8 @@ class Game:
             self.moving_ticks_boundary -= 1
 
             # if moved enough, stop moving
-            if (self.moving_ticks_boundary == 0):
+            if (self.moving_ticks_boundary <= 0):
+
                 comms.post_message({"move": -1})
             return
         
@@ -180,8 +193,12 @@ class Game:
             or my_tank_x - left < self.allowable_boundary_distance
             or right - my_tank_x < self.allowable_boundary_distance):
             # move if we are close
+
+      
             self.moving_ticks_boundary = 5 # MAGIC
+        
             comms.post_message({"path": [self.width/2, self.height/2]})
+            self.random_movement_clock = 10
 
     def check_wall(self):
         '''
@@ -242,9 +259,10 @@ class Game:
     # paths to a random location
     def path_random(self):
 
-        rand_x = random.randrange(self.closing_boundary["left"] + MAGIC_DISTANCE, self.closing_boundary["right"] - MAGIC_DISTANCE)
-        rand_y = random.randrange(self.closing_boundary["bottom"] + MAGIC_DISTANCE, self.closing_boundary["top"] - MAGIC_DISTANCE)
+        rand_x = random.randrange(int(self.closing_boundary["left"]) + MAGIC_DISTANCE, int(self.closing_boundary["right"]) - MAGIC_DISTANCE)
+        rand_y = random.randrange(int(self.closing_boundary["bottom"]) + MAGIC_DISTANCE, int(self.closing_boundary["top"]) - MAGIC_DISTANCE)
         comms.post_message({"path": [rand_x, rand_y]})
+        self.random_movement_clock = CLOCK_COUNTDOWN_START
 
 
         
