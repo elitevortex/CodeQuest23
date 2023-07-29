@@ -102,18 +102,20 @@ class Game:
         This is where you should write your bot code to process the data and respond to the game.
         """
 
+        self.close_to_boundary()
+
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
 
         # First element is the closest power up to our tank
         # index has 3 elements -> distance between the tank n the power up, position of the powerup, type of the powerup
         self.power_ups_distances = []
     
-        # Iterate through the updated objects
-        for updated_object in self.current_turn_message["message"]["updated_objects"]:
-            # if the object has no velocity, just position (Walls: 3 & 4, PowerUps: 7, Boundary is type 5)
-            if updated_object["type"] == 7:
-                self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
-            # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
+        # # Iterate through the updated objects
+        # for updated_object in self.current_turn_message["message"]["updated_objects"]:
+        #     # if the object has no velocity, just position (Walls: 3 & 4, PowerUps: 7, Boundary is type 5)
+        #     if updated_object["type"] == ObjectTypes.POWERUP.value:
+        #         self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
+        #     # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
 
         
     def update_powerUp_distances(self, position: list(), powerup_type: str) -> None:
@@ -137,7 +139,7 @@ class Game:
             # if moved enough, stop moving
             if (self.moving_ticks == 0):
                 comms.post_message({"move": -1})
-            return False
+            return
         
         # finds closing boundary
         for game_object in self.objects.values():
@@ -163,8 +165,7 @@ class Game:
             or my_tank_x - left < self.allowable_boundary_distance
             or right - my_tank_x < self.allowable_boundary_distance):
             self.moving_ticks = 5 # MAGIC
-            return True
-        return False
+            comms.post_message({"path": [self.width/2, self.height/2]})
 
     def check_wall(self):
         '''
