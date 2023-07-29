@@ -5,6 +5,8 @@ import heapq
 import comms
 from object_types import ObjectTypes
 
+MAGIC_DISTANCE = 50
+
 class Game:
     """
     Stores all information about the game and manages the communication cycle.
@@ -22,6 +24,9 @@ class Game:
         self.enemy_tank_id = tank_id_message["message"]["enemy-tank-id"]
 
         self.current_turn_message = None
+
+        # coordinates of the closing boundary
+        self.closing_boundary = {}
 
         # variables for moving away from boundary
         # distance away from boundary
@@ -101,8 +106,8 @@ class Game:
         """
         This is where you should write your bot code to process the data and respond to the game.
         """
-
-        self.close_to_boundary()
+        self.update_closing_boundaries()
+        self.close_to_closing_boundary()
 
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
 
@@ -128,20 +133,10 @@ class Game:
         """
         heapq.heappush(self.power_ups_distances, (distance(self.my_tank_pos, position), position, powerup_type))
 
-
-    # checks if we are close to boundary
-    def close_to_boundary(self):
-
-        # check if we are currently moving
-        if (self.moving_ticks > 0):
-            self.moving_ticks -= 1
-
-            # if moved enough, stop moving
-            if (self.moving_ticks == 0):
-                comms.post_message({"move": -1})
-            return
-        
-        # finds closing boundary
+    # updates the values of the self.closing_boundary {top, right, bottom, left}
+    # top / bottom are y coordinates of closing boundary
+    # left / right are x coordinate of closing boundary
+    def update_closing_boundaries(self):
         for game_object in self.objects.values():
             if game_object["type"] == ObjectTypes.CLOSING_BOUNDARY.value:
                 closing_boundary = game_object
@@ -153,6 +148,25 @@ class Game:
         right = positions[3][0]
         bottom = positions[1][1]
         left = positions[1][0]
+        self.closing_boundary = {"top": top, "right": right, "bottom": bottom, "left": left}
+
+    # checks if we are close to boundary and moves if we are
+    def close_to_closing_boundary(self):
+
+        # check if we are currently moving
+        if (self.moving_ticks > 0):
+            self.moving_ticks -= 1
+
+            # if moved enough, stop moving
+            if (self.moving_ticks == 0):
+                comms.post_message({"move": -1})
+            return
+        
+        # finds top, bottom, left and right of closing boundary
+        top = self.closing_boundary["top"]
+        right = self.closing_boundary["right"]
+        bottom = self.closing_boundary["bottom"]
+        left = self.closing_boundary["left"]
 
         # finds tank coordinates
         my_tank = self.objects.get(self.tank_id)
@@ -164,6 +178,7 @@ class Game:
             or top - my_tank_y < self.allowable_boundary_distance
             or my_tank_x - left < self.allowable_boundary_distance
             or right - my_tank_x < self.allowable_boundary_distance):
+            # move if we are close
             self.moving_ticks = 5 # MAGIC
             comms.post_message({"path": [self.width/2, self.height/2]})
 
@@ -223,6 +238,15 @@ class Game:
         shoot_angle = math.atan(y_diff // x_diff)
         comms.post_message({"shoot": shoot_angle})
 
+    # paths to a random location
+    def path_random(self):
+
+        rand_x = random.randrange(self.closing_boundary["left"] + MAGIC_DISTANCE, self.closing_boundary["right"] - MAGIC_DISTANCE)
+        rand_y = random.randrange(self.closing_boundary["bottom"] + MAGIC_DISTANCE, self.closing_boundary["top"] - MAGIC_DISTANCE)
+        comms.post_message({"path": [rand_x, rand_y]})
+
+
+        
 
 
 import math
@@ -271,7 +295,6 @@ def prioritize_bullets(self, tank):
 
     # Return a sequence of bullets in order of priority
     return [bullet_id for bullet_id, _ in bullet_priority]
-
 
 
 
