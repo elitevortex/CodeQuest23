@@ -36,6 +36,7 @@ class Game:
 
         self.random_movement_clock = CLOCK_COUNTDOWN_START
 
+
         # We will store all game objects here
         self.objects = {}
 
@@ -119,7 +120,6 @@ class Game:
             # if long enough time has passed, then move to random spot
             if (self.random_movement_clock <= 0):
                 self.path_random()
-        
 
 
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
@@ -172,6 +172,7 @@ class Game:
 
             # if moved enough, stop moving
             if (self.moving_ticks_boundary <= 0):
+
                 comms.post_message({"move": -1})
             return
         
@@ -192,7 +193,10 @@ class Game:
             or my_tank_x - left < self.allowable_boundary_distance
             or right - my_tank_x < self.allowable_boundary_distance):
             # move if we are close
-            self.moving_ticks_boundary = 5
+
+      
+            self.moving_ticks_boundary = 5 # MAGIC
+        
             comms.post_message({"path": [self.width/2, self.height/2]})
             self.random_movement_clock = 10
 
