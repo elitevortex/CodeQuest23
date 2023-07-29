@@ -226,6 +226,9 @@ class Game:
         y_diff = self.enemy_tank_pos[1] - self.my_tank_pos[1]
         x_diff = self.enemy_tank_pos[0] - self.my_tank_pos[0]
 
+        if (x_diff == 0):
+            return
+
         # Calculating projected line of bullet, if shot
         m = y_diff /  x_diff
 
@@ -247,14 +250,16 @@ class Game:
                     
         
         # Shoot if we have open sight
+        # means we must use opposite angle (as they would've cancelled eachother out and given wrong angle)
         if will_collide == False:
-            # enemy is on bottom left (both y and x negative)
-            # means we must use opposite angle (as they would've cancelled eachother out and given wrong angle)
             if y_diff < 0 and x_diff < 0:
                 shoot_angle = 180 + (180/math.pi) * (math.atan( y_diff /  x_diff))
             # if enemy is on top left
-            elif x_diff < 0:  
+            elif x_diff < 0 and y_diff > 0:
                 shoot_angle = 180 - (180/math.pi) * (math.atan( y_diff /  x_diff))
+            # if enemy is on bottom right
+            elif x_diff > 0 and y_diff < 0:
+                shoot_angle = 270 + (180/math.pi) * (math.atan( y_diff /  x_diff))
             # enemy is on right (can be handled by one angle)
             else: 
                 shoot_angle = (180/math.pi) * (math.atan( y_diff /  x_diff))
@@ -267,6 +272,8 @@ class Game:
         rand_y = random.randrange(int(self.closing_boundary["bottom"]) + MAGIC_DISTANCE, int(self.closing_boundary["top"]) - MAGIC_DISTANCE)
         comms.post_message({"path": [rand_x, rand_y]})
         self.random_movement_clock = CLOCK_COUNTDOWN_START
+
+    
 
 
 ## HELPER FUNCTIONS 
