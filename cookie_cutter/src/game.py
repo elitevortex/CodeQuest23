@@ -1,6 +1,7 @@
 import random
 import sys
 import heapq
+import math
 
 import comms
 from object_types import ObjectTypes
@@ -127,18 +128,9 @@ class Game:
             if (self.random_movement_clock <= 0):
                 self.path_random()
 
-        # Write your code here... For demonstration, this bot just shoots randomly every turn.
-
         # Get distances from power ups based on current position
         self.update_powerUp_distances()
-    
-        # # Iterate through the updated objects
-        # for updated_object in self.current_turn_message["message"]["updated_objects"]:
-        #     # if the object has no velocity, just position (Walls: 3 & 4, PowerUps: 7, Boundary is type 5)
-        #     if updated_object["type"] == ObjectTypes.POWERUP.value:
-        #         self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
-        #     # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
-        
+
 
     def update_tanks_pos(self):
         '''
@@ -158,7 +150,7 @@ class Game:
 
         for game_object in self.objects.values():
             if game_object["type"] == ObjectTypes.POWERUP.value:
-                heapq.heappush(self.power_ups_distances, (distance(self.my_tank_pos, game_object["position"]), game_object, game_object["position"]))
+                heapq.heappush(self.power_ups_distances, (math.dist(self.my_tank_pos, game_object["position"]), game_object))
 
 
     # updates the values of the self.closing_boundary {top, right, bottom, left}
@@ -215,43 +207,6 @@ class Game:
             comms.post_message({"path": [self.width/2, self.height/2]})
             self.random_movement_clock = 10
 
-    def check_wall(self):
-        '''
-        Checks if we hit a boundary, wall, or tank
-
-        "destructibleWall-id": {
-            "type": 4,
-            "position": [356.12, 534.39],
-            "hp": 1
-        }mkkn
-
-        "boundary-id": {
-            "type": 6, 
-            "position": [
-                [1.50, 998.5],
-                [1.50, 1.50],
-                [1798.5, 1.50],
-                [1798.5, 998.5]
-            ], 
-            "velocity": [
-                [10.0, 0.0],
-                [0.0, 10.0],
-                [-10.0, 0.0],
-                [0.0, -10.0]
-            ]
-        }
-
-        "wall-id": {
-            "type": 3,
-            "position": [356.12, 534.39]
-        }
-        '''
-        # WALL
-        # check if our position is near another position
-        
-
-        pass
-
 
     def shoot_tank(self):
         '''
@@ -269,8 +224,7 @@ class Game:
 
         y_diff = self.enemy_tank_pos[1] - self.my_tank_pos[1]
         x_diff = self.enemy_tank_pos[0] - self.my_tank_pos[0]
-        print(x_diff, file=sys.stderr)
-        print(y_diff, file=sys.stderr)
+
         # if enemy is on left
         if x_diff < 0:  
             shoot_angle = 180.0 - (180/math.pi) * (math.atan(y_diff / x_diff))
@@ -287,10 +241,7 @@ class Game:
         self.random_movement_clock = CLOCK_COUNTDOWN_START
 
 
-     
 
-
-import math
 ## HELPER FUNCTIONS 
 def distance(point1, point2):
 
