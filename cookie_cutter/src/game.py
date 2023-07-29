@@ -64,6 +64,7 @@ class Game:
         # Read and save the message
         self.current_turn_message = comms.read_message()
 
+        # Break out condition
         if self.current_turn_message == comms.END_SIGNAL:
             return False
 
@@ -89,9 +90,57 @@ class Game:
         """
 
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
+         # Example implementation:
+        
+        # Get the current position of your tank
+        my_tank = self.objects.get(self.tank_id)
+        if my_tank is None:
+            return
 
-        comms.post_message({
-            "shoot": random.uniform(0, random.randint(1, 360))
-        })
+        # Decide on a random movement direction (for demonstration purposes)
+        move_direction = random.randint(0, 360)
 
+        # Shoot at a random angle (for demonstration purposes)
+        shoot_angle = random.uniform(0, 360)
+
+        # Post the movement and shooting actions
+        comms.post_message({"move": move_direction})
+        comms.post_message({"shoot": shoot_angle})
+
+
+    def check_collision(self):
+        '''
+        Checks if we hit a boundary, wall, or tank
+
+        WALL
+            "wall-id": {
+            "type": 3,
+            "position": [356.12, 534.39]
+        }
+
+        "destructibleWall-id": {
+            "type": 4,
+            "position": [356.12, 534.39],
+            "hp": 1
+        }
+        '''
+        pass
+    
+        
+
+    def check_bullets(self):
+        pass
+
+    def bullet_dist(self):
+        '''
+        Checks a bullet's distance to us
+        '''
+
+    def is_on_target(self):
+        '''
+        Checks if a bullet is on target to us
+        '''
+        pass
+    
+    
 
