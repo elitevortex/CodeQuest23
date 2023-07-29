@@ -225,12 +225,39 @@ class Game:
         y_diff = self.enemy_tank_pos[1] - self.my_tank_pos[1]
         x_diff = self.enemy_tank_pos[0] - self.my_tank_pos[0]
 
-        # if enemy is on left
-        if x_diff < 0:  
-            shoot_angle = 180.0 - (180/math.pi) * (math.atan(y_diff / x_diff))
-        else: #enemy is on right
-            shoot_angle = (180/math.pi) * (math.atan(y_diff / x_diff))
-        comms.post_message({"shoot": shoot_angle})
+        # Calculating projected line of bullet, if shot
+        m = y_diff /  x_diff
+
+        y_int = self.my_tank_pos[1] - (y_diff /  x_diff) * self.my_tank_pos[0]
+
+        # Collision occurs within 10 pixels - arbitrary
+        will_collide = False
+        #Check if we collide with walls
+        # for game_object in self.objects.values():
+        #     if game_object["type"] == ObjectTypes.WALL.value:
+        #         wall_pos_x = game_object["position"][0]
+        #         wall_pos_y = game_object["position"][1]
+        #         # If there's a collision with a wall
+        #         # ie. it's within the range of the wall
+        #         projected_y =  m * wall_pos_x + y_int
+        #         if projected_y - 10 <= wall_pos_y <=  projected_y + 10
+        #             # dont shoot, exit early
+        #             will_collide = True
+        #             break
+        
+        # Shoot if we have open sight
+        if will_collide == False:
+            # enemy is on bottom left (both y and x negative)
+            # means we must use opposite angle (as they would've cancelled eachother out and given wrong angle)
+            if y_diff < 0 and x_diff < 0:
+                shoot_angle = 180 + (180/math.pi) * (math.atan( y_diff /  x_diff))
+            # if enemy is on top left
+            elif x_diff < 0:  
+                shoot_angle = 180 - (180/math.pi) * (math.atan( y_diff /  x_diff))
+            # enemy is on right (can be handled by one angle)
+            else: 
+                shoot_angle = (180/math.pi) * (math.atan( y_diff /  x_diff))
+            comms.post_message({"shoot": shoot_angle})
 
     # paths to a random location
     def path_random(self):
@@ -239,7 +266,6 @@ class Game:
         rand_y = random.randrange(int(self.closing_boundary["bottom"]) + MAGIC_DISTANCE, int(self.closing_boundary["top"]) - MAGIC_DISTANCE)
         comms.post_message({"path": [rand_x, rand_y]})
         self.random_movement_clock = CLOCK_COUNTDOWN_START
-
 
 
 ## HELPER FUNCTIONS 
