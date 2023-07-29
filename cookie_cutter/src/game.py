@@ -41,10 +41,13 @@ class Game:
         self.objects = {}
 
         # Get the current position of your tank
-        self.my_tank_pos = self.objects.get(self.tank_id)
+        self.my_tank_pos = None
 
         # Get current position of enemy
-        self.enemy_tank_pos = self.objects.get(self.enemy_tank_id)
+        self.enemy_tank_pos = None
+
+        # Store distances from current position of tank to power ups 
+        self.power_ups_distances = []
 
         next_init_message = comms.read_message()
         while next_init_message != comms.END_INIT_SIGNAL:
@@ -113,6 +116,7 @@ class Game:
         self.update_closing_boundaries()
         self.close_to_closing_boundary()
 
+
         # if not moving away from boundary
         if (self.moving_ticks_boundary <= 0):
             self.random_movement_clock -= 1
@@ -121,30 +125,24 @@ class Game:
             if (self.random_movement_clock <= 0):
                 self.path_random()
 
-
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
 
-        # First element is the closest power up to our tank
-        # index has 3 elements -> distance between the tank n the power up, position of the powerup, type of the powerup
-        self.power_ups_distances = []
+        # Get distances from power ups based on current position
+        self.update_powerUp_distances()
     
-        # # Iterate through the updated objects
-        # for updated_object in self.current_turn_message["message"]["updated_objects"]:
-        #     # if the object has no velocity, just position (Walls: 3 & 4, PowerUps: 7, Boundary is type 5)
-        #     if updated_object["type"] == ObjectTypes.POWERUP.value:
-        #         self.update_powerUp_distances(updated_object["position"], updated_object["powerup_type"])
-        #     # if the object has velocity + position (Tank: 1, Bullet: 2, Closing Boundary is type 6)
-
         
-    def update_powerUp_distances(self, position: list(), powerup_type: str) -> None:
+    def update_powerUp_distances(self):
         """
-        takes in the details of the position and powerup type of a Power Up object
-        position: position of the power up
         powerup_type: "HEALTH" / "SPEED" / "DAMAGE"
 
-        modifies the power_ups_reachability array
+        modifies the distances_from_powerUps array
         """
-        heapq.heappush(self.power_ups_distances, (distance(self.my_tank_pos, position), position, powerup_type))
+        self.power_ups_distances = []
+
+        for game_object in self.objects.values():
+            if game_object["type"] == ObjectTypes.POWERUP.value:
+                heapq.heappush(self.power_ups_distances, (distance(self.my_tank_pos, game_object["position"]), game_object, game_object["position"]))
+
 
     # updates the values of the self.closing_boundary {top, right, bottom, left}
     # top / bottom are y coordinates of closing boundary
@@ -265,7 +263,7 @@ class Game:
         self.random_movement_clock = CLOCK_COUNTDOWN_START
 
 
-        
+     
 
 
 import math
