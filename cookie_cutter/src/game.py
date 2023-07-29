@@ -165,14 +165,12 @@ class Game:
 
         for game_object in self.objects.values():
             if game_object["type"] == ObjectTypes.POWERUP.value:
-                print(f"2 ways to get position: {game_object['position']}", file = sys.stderr)
                 heapq.heappush(self.power_ups_distances, (math.dist(self.my_tank_pos, game_object["position"]), game_object))
                 power_up_exist = True
 
         # TO-DO: priority of power up being the last one as of now, potentially update this
         if power_up_exist:
             should_be_position = heapq.heappop(self.power_ups_distances)[1]['position']
-            print(f"this should be a position of the nearest powerup {should_be_position}", file = sys.stderr)
             self.actions[3] = comms.post_message({"path": should_be_position})
 
 
