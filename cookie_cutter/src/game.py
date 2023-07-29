@@ -18,6 +18,7 @@ class Game:
     def __init__(self):
         tank_id_message: dict = comms.read_message()
         self.tank_id = tank_id_message["message"]["your-tank-id"]
+        self.enemy_tank_id = tank_id_message["message"]["enemy-tank-id"]
 
         self.current_turn_message = None
 
@@ -92,6 +93,10 @@ class Game:
         # Write your code here... For demonstration, this bot just shoots randomly every turn.
          # Example implementation:
         
+        all_object_ids = self.objects.keys()
+        
+        print(all_object_ids)
+        
         # Get the current position of your tank
         my_tank = self.objects.get(self.tank_id)
         if my_tank is None:
@@ -106,41 +111,95 @@ class Game:
         # Post the movement and shooting actions
         comms.post_message({"move": move_direction})
         comms.post_message({"shoot": shoot_angle})
+        
 
-
-    def check_collision(self):
+    def check_wall(self):
         '''
         Checks if we hit a boundary, wall, or tank
-
-        WALL
-            "wall-id": {
-            "type": 3,
-            "position": [356.12, 534.39]
-        }
 
         "destructibleWall-id": {
             "type": 4,
             "position": [356.12, 534.39],
             "hp": 1
         }
+
+        "boundary-id": {
+            "type": 6, 
+            "position": [
+                [1.50, 998.5],
+                [1.50, 1.50],
+                [1798.5, 1.50],
+                [1798.5, 998.5]
+            ], 
+            "velocity": [
+                [10.0, 0.0],
+                [0.0, 10.0],
+                [-10.0, 0.0],
+                [0.0, -10.0]
+            ]
+        }
+
+        "wall-id": {
+            "type": 3,
+            "position": [356.12, 534.39]
+        }
         '''
-        pass
-    
+        # WALL
+        # check if our position is near another position
         
 
-    def check_bullets(self):
         pass
 
-    def bullet_dist(self):
-        '''
-        Checks a bullet's distance to us
-        '''
 
-    def is_on_target(self):
-        '''
-        Checks if a bullet is on target to us
-        '''
-        pass
     
-    
+import math
+## HELPER FUNCTIONS 
+def distance(point1, point2):
+
+    return math.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
+
+def calculate_projected_position(position, velocity, time):
+    x = position[0] + velocity[0] * time
+    y = position[1] + velocity[1] * time
+    return [x, y]
+
+def prioritize_bullets(self, tank):
+    '''
+    Class function
+    Returns list of bullets based on their closeness to hitting the current tank 
+            (based on tank and bullet trajectory)
+    '''
+    tank_position = tank["position"]
+    tank_velocity = tank["velocity"]
+    bullet_priority = []
+
+    for bullet in self.objects.values():
+        if bullet == ObjectTypes.BULLET:
+ 
+            bullet_position = bullet["position"]
+            bullet_velocity = bullet["velocity"]
+
+            # Calculate the time of intersection between the bullet and the tank
+            time_x = (tank_position[0] - bullet_position[0]) / (bullet_velocity[0] - tank_velocity[0])
+            time_y = (tank_position[1] - bullet_position[1]) / (bullet_velocity[1] - tank_velocity[1])
+            time = max(time_x, time_y)
+
+            # Calculate the projected position of the tank and bullet at the time of intersection
+            tank_projected_position = calculate_projected_position(tank_position, tank_velocity, time)
+            bullet_projected_position = calculate_projected_position(bullet_position, bullet_velocity, time)
+
+            # Calculate the distance between the tank and the bullet's projected position
+            distance_to_bullet = distance(tank_projected_position, bullet_projected_position)
+
+            bullet_priority.append((bullet, distance_to_bullet))
+
+    # Sort bullets by distance in ascending order (closer bullets have higher priority)
+    bullet_priority.sort(key=lambda x: x[1])
+
+    # Return a sequence of bullets in order of priority
+    return [bullet_id for bullet_id, _ in bullet_priority]
+
+
+
+
 
