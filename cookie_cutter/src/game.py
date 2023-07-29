@@ -1,8 +1,8 @@
 import random
+import sys
 
 import comms
 from object_types import ObjectTypes
-
 
 class Game:
     """
@@ -21,6 +21,11 @@ class Game:
         self.enemy_tank_id = tank_id_message["message"]["enemy-tank-id"]
 
         self.current_turn_message = None
+
+        # variables for moving away from boundary
+        # distance away from boundary
+        self.allowable_boundary_distance = 100
+        self.moving_ticks = 0
 
         # We will store all game objects here
         self.objects = {}
@@ -95,23 +100,65 @@ class Game:
         
         all_object_ids = self.objects.keys()
         
-        print(all_object_ids)
+        # print(all_object_ids, file=sys.stderr)
         
         # Get the current position of your tank
         my_tank = self.objects.get(self.tank_id)
         if my_tank is None:
             return
+        
+        if (self.close_to_boundary()):
+            comms.post_message({"path": [self.width/2, self.height/2]})
 
         # Decide on a random movement direction (for demonstration purposes)
-        move_direction = random.randint(0, 360)
+        # move_direction = random.randint(0, 360)
 
-        # Shoot at a random angle (for demonstration purposes)
-        shoot_angle = random.uniform(0, 360)
+        # # Shoot at a random angle (for demonstration purposes)
+        # shoot_angle = random.uniform(0, 360)
 
-        # Post the movement and shooting actions
-        comms.post_message({"move": move_direction})
-        comms.post_message({"shoot": shoot_angle})
+        # # Post the movement and shooting actions
+        # comms.post_message({"move": 90})
+        # comms.post_message({"shoot": shoot_angle})
         
+
+    # checks if we are close to boundary
+    def close_to_boundary(self):
+
+        # check if we are currently moving
+        if (self.moving_ticks > 0):
+            self.moving_ticks -= 1
+
+            # if moved enough, stop moving
+            if (self.moving_ticks == 0):
+                comms.post_message({"move": -1})
+            return False
+        
+        # finds closing boundary
+        for game_object in self.objects.values():
+            if game_object["type"] == ObjectTypes.CLOSING_BOUNDARY.value:
+                closing_boundary = game_object
+                break
+        
+        # finds top, bottom, left and right
+        positions = closing_boundary["position"]
+        top = positions[3][1]
+        right = positions[3][0]
+        bottom = positions[1][1]
+        left = positions[1][0]
+
+        # finds tank coordinates
+        my_tank = self.objects.get(self.tank_id)
+        my_tank_x = my_tank["position"][0]
+        my_tank_y = my_tank["position"][1]
+
+        # checks distances between tank and boundary
+        if (my_tank_y - bottom < self.allowable_boundary_distance
+            or top - my_tank_y < self.allowable_boundary_distance
+            or my_tank_x - left < self.allowable_boundary_distance
+            or right - my_tank_x < self.allowable_boundary_distance):
+            self.moving_ticks = 5 # MAGIC
+            return True
+        return False
 
     def check_wall(self):
         '''
@@ -151,7 +198,9 @@ class Game:
         pass
 
 
-    
+        
+
+
 
 
 
